@@ -3,7 +3,7 @@ package com.github.mrdziuban.moultingyaml
 import net.jcazevedo.moultingyaml._
 import _root_.shapeless.{::, HList, HNil, LabelledProductTypeClassCompanion, LabelledProductTypeClass}
 
-package object shapeless extends LabelledProductTypeClassCompanion[YamlFormat] {
+object shapeless extends LabelledProductTypeClassCompanion[YamlFormat] {
   object typeClass extends LabelledProductTypeClass[YamlFormat] {
     def emptyProduct: YamlFormat[HNil] = new YamlFormat[HNil] {
       def read(v: YamlValue): HNil = HNil
