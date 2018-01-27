@@ -8,6 +8,7 @@ import org.joda.time.DateTime
 import org.scalacheck.{Arbitrary, Properties}
 import org.scalacheck.Prop.forAll
 import org.scalacheck.ScalacheckShapeless._
+import scala.language.higherKinds
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.{typeOf, TypeTag}
 
@@ -195,4 +196,26 @@ object ShapelessSpec extends Properties("shapeless") {
   property("serializes deeply nested case class") = forAll((d: DeeplyNested) =>
     d.toYaml == YamlObject(YamlString("n") -> YamlObject(YamlString("c") -> YamlObject(YamlString("a1") -> YamlNumber(d.n.c.a1)))))
   property("deserializes deeply nested case class") = forAll((d: DeeplyNested) => d.toYaml.convertTo[DeeplyNested] == d)
+
+  case class TypeParam[A](a: A)
+  property("serializes case class with String type parameter") = forAll((x: TypeParam[String]) =>
+    x.toYaml == YamlObject(YamlString("a") -> YamlString(x.a)))
+  property("deserializes case class with String type parameter") = forAll((x: TypeParam[String]) =>
+    x.toYaml.convertTo[TypeParam[String]] == x)
+
+  property("serializes case class with Int type parameter") = forAll((x: TypeParam[Int]) =>
+    x.toYaml == YamlObject(YamlString("a") -> YamlNumber(x.a)))
+  property("deserializes case class with Int type parameter") = forAll((x: TypeParam[Int]) =>
+    x.toYaml.convertTo[TypeParam[Int]] == x)
+
+  case class HigherKinded[F[_], A](x: F[A])
+  property("serializes higher kinded List case class") = forAll((x: HigherKinded[List, String]) =>
+    x.toYaml == YamlObject(YamlString("x") -> YamlArray(x.x.map(YamlString(_)):_*)))
+  property("deserializes higher kinded List case class") = forAll((x: HigherKinded[List, String]) =>
+    x.toYaml.convertTo[HigherKinded[List, String]] == x)
+
+  property("serializes higher kinded Option case class") = forAll((x: HigherKinded[Option, String]) =>
+    x.toYaml == YamlObject(YamlString("x") -> x.x.map(YamlString(_)).getOrElse(YamlNull)))
+  property("deserializes higher kinded Option case class") = forAll((x: HigherKinded[Option, String]) =>
+    x.toYaml.convertTo[HigherKinded[Option, String]] == x)
 }
