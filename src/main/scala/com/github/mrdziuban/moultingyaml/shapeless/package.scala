@@ -7,7 +7,7 @@ package object shapeless extends LabelledProductTypeClassCompanion[YamlFormat] {
   object typeClass extends LabelledProductTypeClass[YamlFormat] {
     def emptyProduct: YamlFormat[HNil] = new YamlFormat[HNil] {
       def read(v: YamlValue): HNil = HNil
-      def write(h: HNil): YamlValue = YamlNull
+      def write(h: HNil): YamlValue = YamlObject()
     }
 
     def product[H, T <: HList](name: String, yh: YamlFormat[H], yt: YamlFormat[T]): YamlFormat[H :: T] =

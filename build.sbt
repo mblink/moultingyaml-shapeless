@@ -23,6 +23,12 @@ scalacOptions := Seq(
 
 scalacOptions in (Compile, console) := scalacOptions.value.filterNot(_.contains("-Ywarn-unused"))
 
+initialCommands in console := """
+import net.jcazevedo.moultingyaml._
+import net.jcazevedo.moultingyaml.DefaultYamlProtocol._
+import com.github.mrdziuban.moultingyaml.shapeless._
+"""
+
 lazy val project = Project("moultingyaml-shapeless", file("."))
   .settings(Seq(
     organization := "com.github.mrdziuban",
