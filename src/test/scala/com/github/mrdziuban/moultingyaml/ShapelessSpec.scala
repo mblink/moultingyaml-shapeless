@@ -5,17 +5,18 @@ import com.github.mrdziuban.moultingyaml.shapeless._
 import net.jcazevedo.moultingyaml._
 import net.jcazevedo.moultingyaml.DefaultYamlProtocol._
 import org.joda.time.DateTime
-import org.scalacheck.{Arbitrary, Properties}
-import org.scalacheck.Prop.forAll
+import org.scalacheck.{Arbitrary, Prop, Properties}
+import org.scalacheck.Prop.{forAll, BooleanOperators}
 import org.scalacheck.ScalacheckShapeless._
 import scala.language.higherKinds
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.{typeOf, TypeTag}
+import scala.util.Try
 
 object ShapelessSpec extends Properties("shapeless") {
   case class Empty()
   property("serializes empty case class as empty YamlObject") = forAll((_: Empty).toYaml == YamlObject())
-  property("deserializes empty YamlObject as empty case class") = forAll((_: Unit) => YamlObject().convertTo[Empty] == Empty())
+  property("deserializes empty YamlObject as empty case class") = Prop(YamlObject().convertTo[Empty] == Empty())
 
   def mkInt(i: Int): YamlValue = YamlNumber(i)
   def mkLong(l: Long): YamlValue = YamlNumber(l)
@@ -36,12 +37,13 @@ object ShapelessSpec extends Properties("shapeless") {
   def mkExpectedIntAndStr(is: IntAndStr): YamlValue =
     YamlObject(YamlString("i") -> mkInt(is.i), YamlString("s") -> mkStr(is.s))
 
-  case class Example[A: Arbitrary: ClassTag: TypeTag: YamlFormat](
+  case class Example[A: Arbitrary: ClassTag: TypeTag, F](
     expectedClass: String,
     mkExpected: A => YamlValue,
+    failureVal: YamlValue,
     collections: Boolean = true,
     compareDeserialized: Option[(A, A) => Boolean] = None
-  ) {
+  )(implicit yamlFormat: YamlFormat[A]) {
     val t = typeOf[A]
     case class Klass(x: A)
     case class KlassO(x: Option[A])
@@ -70,7 +72,7 @@ object ShapelessSpec extends Properties("shapeless") {
         } yield c(a, e)).getOrElse(actual == expected)
       }
 
-      // Anything can be converted to Unit which causes failures with Either[_, Unit] tests
+      // Anything can be converted to Unit which causes some issues with these tests
       if (!t.toString.contains("Unit") && !t.toString.contains("IntAndStr")) {
         property(s"serializes Either[IntAndStr, $t] as $expectedClass or empty object") = forAll((x: KlassEither) =>
           x.toYaml == YamlObject(YamlString("x") -> x.x.fold(mkExpectedIntAndStr(_), mkExpected(_))))
@@ -83,20 +85,32 @@ object ShapelessSpec extends Properties("shapeless") {
             e <- expected.x.right
           } yield compareDeserialized.map(_(a, e)).getOrElse(a == a)).right.getOrElse(actual == expected)
         }
+
+        val actualErr = Try(YamlObject(YamlString("x") -> failureVal).convertTo[Klass])
+        val expectedErr = Try(yamlFormat.read(failureVal))
+        property(s"fails to deserialize $failureVal to $t with the same error as the default formatter") =
+          (actualErr.isFailure :| "Actual is not failure") &&
+            (expectedErr.isFailure :| "Expected is not failure") &&
+            ((actualErr.map(_ => false).recoverWith {
+              case a: DeserializationException => expectedErr.map(_ => false).recover {
+                case e: DeserializationException => a == e
+              }
+            }).getOrElse(false) :| s"Actual does not equal expected: $actualErr != $expectedErr")
       }
 
       if (collections) {
-        Example[List[A]](s"YamlArray of $expectedClass", x => YamlArray(x.map(mkExpected(_)):_*), false).mkProps
+        Example[List[A], F](s"YamlArray of $expectedClass", x => YamlArray(x.map(mkExpected(_)):_*), failureVal, false).mkProps
 
-        Example[Seq[A]](s"YamlArray of $expectedClass", x => YamlArray(x.map(mkExpected(_)):_*), false).mkProps
+        Example[Seq[A], F](s"YamlArray of $expectedClass", x => YamlArray(x.map(mkExpected(_)):_*), failureVal, false).mkProps
 
-        Example[Array[A]](s"YamlArray of $expectedClass", x => YamlArray(x.map(mkExpected(_)):_*), false,
+        Example[Array[A], F](s"YamlArray of $expectedClass", x => YamlArray(x.map(mkExpected(_)):_*), failureVal, false,
           Some((y: Array[A], k: Array[A]) => y.deep == k.deep)).mkProps
 
-        Example[Set[A]](s"YamlSet of $expectedClass", x => YamlSet(x.map(mkExpected(_))), false).mkProps
+        Example[Set[A], F](s"YamlSet of $expectedClass", x => YamlSet(x.map(mkExpected(_))), failureVal, false).mkProps
 
-        Example[Map[String, A]](s"YamlObject of YamlString -> $expectedClass",
+        Example[Map[String, A], F](s"YamlObject of YamlString -> $expectedClass",
           x => YamlObject(x.map(t => (YamlString(t._1): YamlValue) -> mkExpected(t._2))),
+          failureVal,
           false).mkProps
       }
 
@@ -105,21 +119,21 @@ object ShapelessSpec extends Properties("shapeless") {
   }
 
   List(
-    Example[Int]("YamlNumber", mkInt(_)),
-    Example[Long]("YamlNumber", mkLong(_)),
-    Example[Float]("YamlNumber", mkFloat(_)),
-    Example[Double]("YamlNumber", mkDouble(_)),
-    Example[Byte]("YamlNumber", mkByte(_)),
-    Example[Short]("YamlNumber", mkShort(_)),
-    Example[BigDecimal]("YamlNumber", mkBigDec(_)),
-    Example[BigInt]("YamlNumber", mkBigInt(_)),
-    Example[Unit]("YamlNumber", mkUnit(_)),
-    Example[Boolean]("YamlBoolean", mkBool(_)),
-    Example[Char]("YamlString", mkChar(_)),
-    Example[String]("YamlString", mkStr(_)),
-    Example[Symbol]("YamlString", mkSym(_)),
-    Example[DateTime]("YamlDate", mkDt(_)),
-    Example[IntAndStr]("YamlObject", mkExpectedIntAndStr(_))).foreach(_.mkProps)
+    Example[Int, String]("YamlNumber", mkInt(_), mkStr("Int")),
+    Example[Long, String]("YamlNumber", mkLong(_), mkStr("Long")),
+    Example[Float, String]("YamlNumber", mkFloat(_), mkStr("Float")),
+    Example[Double, String]("YamlNumber", mkDouble(_), mkStr("Double")),
+    Example[Byte, String]("YamlNumber", mkByte(_), mkStr("Byte")),
+    Example[Short, String]("YamlNumber", mkShort(_), mkStr("Short")),
+    Example[BigDecimal, String]("YamlNumber", mkBigDec(_), mkStr("BigDecimal")),
+    Example[BigInt, String]("YamlNumber", mkBigInt(_), mkStr("BigInt")),
+    Example[Unit, String]("YamlNumber", mkUnit(_), mkStr("Bool")),
+    Example[Boolean, String]("YamlBoolean", mkBool(_), mkStr("Boolean")),
+    Example[Char, Int]("YamlString", mkChar(_), mkInt(1)),
+    Example[String, IntAndStr]("YamlString", mkStr(_), mkExpectedIntAndStr(IntAndStr(1, "a"))),
+    Example[Symbol, Int]("YamlString", mkSym(_), mkInt(1)),
+    Example[DateTime, String]("YamlDate", mkDt(_), mkStr("DateTime")),
+    Example[IntAndStr, String]("YamlObject", mkExpectedIntAndStr(_), mkStr("IntAndStr"))).foreach(_.mkProps)
 
   case class CCExample[A: Arbitrary: ClassTag: TypeTag: YamlFormat](productFormatter: YamlFormat[A], num: Int) {
     def mkProps(): Unit = {
