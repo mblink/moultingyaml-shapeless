@@ -1,7 +1,7 @@
-package com.github.mrdziuban.moultingyaml
+package bondlink.moultingyaml
 
+import bondlink.moultingyaml.shapeless._
 import com.fortysevendeg.scalacheck.datetime.joda.ArbitraryJoda._
-import com.github.mrdziuban.moultingyaml.shapeless._
 import net.jcazevedo.moultingyaml._
 import net.jcazevedo.moultingyaml.DefaultYamlProtocol._
 import org.joda.time.DateTime

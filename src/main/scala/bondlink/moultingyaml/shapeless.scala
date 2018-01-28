@@ -1,4 +1,4 @@
-package com.github.mrdziuban.moultingyaml
+package bondlink.moultingyaml
 
 import net.jcazevedo.moultingyaml._
 import _root_.shapeless.{::, HList, HNil, LabelledProductTypeClassCompanion, LabelledProductTypeClass}

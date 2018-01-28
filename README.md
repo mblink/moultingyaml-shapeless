@@ -9,7 +9,7 @@ This project is available for Scala 2.11 and 2.12.
 Add to your library dependencies in `build.sbt`:
 
 ```scala
-libraryDependencies += "com.github.mrdziuban" %% "moultingyaml-shapeless" % "1.0.0"
+libraryDependencies += "bondlink" %% "moultingyaml-shapeless" % "1.0.0"
 ```
 
 ## Usage
@@ -17,7 +17,7 @@ libraryDependencies += "com.github.mrdziuban" %% "moultingyaml-shapeless" % "1.0
 ```scala
 import net.jcazevedo.moultingyaml._
 import net.jcazevedo.moultingyaml.DefaultYamlProtocol._
-import com.github.mrdziuban.moultingyaml.shapeless._
+import bondlink.moultingyaml.shapeless._
 
 case class Example(i: Int, s: String)
 
@@ -42,7 +42,7 @@ implicit `YamlFormat` instances in scope for all the fields of your case class. 
 
 ```scala
 import net.jcazevedo.moultingyaml._
-import com.github.mrdziuban.moultingyaml.shapeless._
+import bondlink.moultingyaml.shapeless._
 
 case class Fail(i: Int)
 
