@@ -9,6 +9,7 @@ This project is available for Scala 2.11 and 2.12.
 Add to your library dependencies in `build.sbt`:
 
 ```scala
+resolvers += Resolver.bintrayRepo("bondlink", "moultingyaml-shapeless")
 libraryDependencies += "bondlink" %% "moultingyaml-shapeless" % "1.0.0"
 ```
 

@@ -1,6 +1,3 @@
-import sbt._
-import sbt.Keys._
-
 lazy val project = Project("moultingyaml-shapeless", file("."))
   .settings(Seq(
     organization := "bondlink",
@@ -48,13 +45,14 @@ lazy val project = Project("moultingyaml-shapeless", file("."))
     ),
     addCompilerPlugin("io.tryp" % "splain" % "0.2.7" cross CrossVersion.patch),
 
-    homepage := Some(url("https://github.com/mrdziuban/moultingyaml-shapeless")),
-    scmInfo := Some(ScmInfo(url("https://github.com/mrdziuban/moultingyaml-shapeless"),
-                           "git@github.com:mrdziuban/moultingyaml-shapeless.git")),
-    developers := List(Developer("mrdziuban", "Matt Dziuban", "mrdziuban@gmail.com", url("http://mattdziuban.com"))),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
-    publishMavenStyle := true,
-    publishTo := Some(if (isSnapshot.value) Opts.resolver.sonatypeSnapshots else Opts.resolver.sonatypeStaging),
+    homepage := Some(url("https://github.com/mblink/moultingyaml-shapeless")),
+    bintrayOrganization := Some("bondlink"),
+    bintrayRepository := "moultingyaml-shapeless",
+    bintrayReleaseOnPublish in ThisBuild := false,
+    publish := {},
+    publishLocal := {},
+
     tutTargetDirectory := baseDirectory.value
   ))
   .enablePlugins(TutPlugin)
