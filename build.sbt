@@ -25,7 +25,8 @@ scalacOptions := Seq(
     case _ => Seq("-Xlint:-unused,_", "-Ywarn-unused:locals,patvars,privates")
   })
 
-scalacOptions in (Compile, console) := scalacOptions.value.filterNot(_.contains("-Ywarn-unused"))
+scalacOptions in (Compile, console) :=
+  scalacOptions.value.filterNot(o => o.contains("-Ywarn-unused") || o.contains("splain"))
 
 initialCommands in console := """
 import net.jcazevedo.moultingyaml._
@@ -36,7 +37,7 @@ import com.github.mrdziuban.moultingyaml.shapeless._
 lazy val project = Project("moultingyaml-shapeless", file("."))
   .settings(Seq(
     organization := "com.github.mrdziuban",
-    version := "0.0.1",
+    version := "1.0.0",
     addCompilerPlugin("io.tryp" % "splain" % "0.2.7" cross CrossVersion.patch),
     resolvers += Resolver.sonatypeRepo("releases"),
     libraryDependencies ++= Seq(
@@ -52,5 +53,7 @@ lazy val project = Project("moultingyaml-shapeless", file("."))
     developers := List(Developer("mrdziuban", "Matt Dziuban", "mrdziuban@gmail.com", url("http://mattdziuban.com"))),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
     publishMavenStyle := true,
-    publishTo := Some(if (isSnapshot.value) Opts.resolver.sonatypeSnapshots else Opts.resolver.sonatypeStaging)
+    publishTo := Some(if (isSnapshot.value) Opts.resolver.sonatypeSnapshots else Opts.resolver.sonatypeStaging),
+    tutTargetDirectory := baseDirectory.value
   ))
+  .enablePlugins(TutPlugin)

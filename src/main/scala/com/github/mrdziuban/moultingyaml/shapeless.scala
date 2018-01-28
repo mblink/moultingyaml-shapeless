@@ -25,4 +25,6 @@ object shapeless extends LabelledProductTypeClassCompanion[YamlFormat] {
       def write(f: F): YamlValue = inst.write(to(f))
     }
   }
+
+  def deriveYamlFormat[A](implicit yf: YamlFormat[A]): YamlFormat[A] = yf
 }
