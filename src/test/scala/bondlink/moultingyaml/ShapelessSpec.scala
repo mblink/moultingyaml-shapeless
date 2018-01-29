@@ -26,7 +26,7 @@ object ShapelessSpec extends Properties("shapeless") {
   def mkShort(s: Short): YamlValue = YamlNumber(s.toInt)
   def mkBigDec(bd: BigDecimal): YamlValue = YamlNumber(bd)
   def mkBigInt(bi: BigInt): YamlValue = YamlNumber(bi)
-  def mkUnit(u: Unit): YamlValue = YamlNumber(1)
+  def mkUnit: YamlValue = YamlNumber(1)
   def mkBool(b: Boolean): YamlValue = YamlBoolean(b)
   def mkChar(c: Char): YamlValue = YamlString(String.valueOf(c))
   def mkStr(s: String): YamlValue = YamlString(s)
@@ -127,7 +127,7 @@ object ShapelessSpec extends Properties("shapeless") {
     Example[Short, String]("YamlNumber", mkShort(_), mkStr("Short")),
     Example[BigDecimal, String]("YamlNumber", mkBigDec(_), mkStr("BigDecimal")),
     Example[BigInt, String]("YamlNumber", mkBigInt(_), mkStr("BigInt")),
-    Example[Unit, String]("YamlNumber", mkUnit(_), mkStr("Bool")),
+    Example[Unit, String]("YamlNumber", _ => mkUnit, mkStr("Bool")),
     Example[Boolean, String]("YamlBoolean", mkBool(_), mkStr("Boolean")),
     Example[Char, Int]("YamlString", mkChar(_), mkInt(1)),
     Example[String, IntAndStr]("YamlString", mkStr(_), mkExpectedIntAndStr(IntAndStr(1, "a"))),
