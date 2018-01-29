@@ -50,8 +50,6 @@ lazy val project = Project("moultingyaml-shapeless", file("."))
     bintrayOrganization := Some("bondlink"),
     bintrayRepository := "moultingyaml-shapeless",
     bintrayReleaseOnPublish in ThisBuild := false,
-    publish := {},
-    publishLocal := {},
 
     tutTargetDirectory := baseDirectory.value
   ))
